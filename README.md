@@ -28,7 +28,7 @@ Git
 
 ![EscapeFromAC_Default](https://user-images.githubusercontent.com/46564046/233114705-ffad50db-3746-49f2-94bb-7d93231bae29.gif)
 
-기간 : 2023.02~2023.04 / 링크 : 
+기간 : 2023.02~2023.04 / 링크 : https://github.com/YosephKim0207/EscapeFromAC
 
 캐릭터의 모듈식 파츠 교체 시스템과 전투 시스템 구축
 
