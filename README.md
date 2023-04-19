@@ -38,6 +38,8 @@ Git
 
 ### 탑다운 2D 슈팅게임 제작(개인과제 / C# / 유니티)
 
+![플레이핵심완성2](https://user-images.githubusercontent.com/46564046/233091869-20c84a42-7a4b-41d9-8f8c-90f21aaeae48.gif)
+
 기간 : 2022.05~2022.06 / 링크 : https://github.com/YosephKim0207/Raiders
 
 끊임 없이 플레이어를 쫓아오는 적과의 전투 시스템 구축
