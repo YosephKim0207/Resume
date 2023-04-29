@@ -12,8 +12,6 @@
 
 ---
 
-### **knowledgeable**
-
 C++ / C# / Unreal / Unity
 
 ### **ETC**
