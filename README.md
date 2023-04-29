@@ -30,7 +30,7 @@ Git
 
 ![EscapeFromAC_Default](https://user-images.githubusercontent.com/46564046/233114705-ffad50db-3746-49f2-94bb-7d93231bae29.gif)
 
-기간 : 2023.02~2023.04 / 링크 : https://github.com/YosephKim0207/EscapeFromAC
+기간 : 2023.02~2023.04 / 포트폴리오 링크 : https://github.com/YosephKim0207/EscapeFromAC
 
 캐릭터의 모듈식 파츠 교체 시스템과 전투 시스템 구축
 
@@ -46,7 +46,7 @@ Git
 
 ![플레이핵심완성2](https://user-images.githubusercontent.com/46564046/233091869-20c84a42-7a4b-41d9-8f8c-90f21aaeae48.gif)
 
-기간 : 2022.05~2022.06 / 링크 : https://github.com/YosephKim0207/Raiders
+기간 : 2022.05~2022.06 / 포트폴리오 링크 : https://github.com/YosephKim0207/Raiders
 
 끊임 없이 플레이어를 쫓아오는 적과의 전투 시스템 구축
 
