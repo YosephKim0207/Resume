@@ -56,6 +56,20 @@ Git
 - 오브젝트 풀링을 통한 최적화
 - A* 알고리즘을 응용한 길찾기 인공지능 제작
 
+### 스토리 중심 게임 제작(학부개인과제 / C# / 유니티)
+
+![전체보스연출](https://user-images.githubusercontent.com/46564046/235314111-4ea7c630-a4f5-4a8a-b34b-5859ca31969c.gif)
+
+기간 : 2021.11 / 포트폴리오 링크 : https://github.com/YosephKim0207/MotionTest_Playable
+
+단편 소설 집필 및 전체 게임 제작
+
+특징
+
+- 서사 중심 플레이
+
+- 카메라 워크 제작
+
 ## ETC
 
 ---
