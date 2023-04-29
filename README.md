@@ -1,4 +1,4 @@
-![IMG_6239](https://user-images.githubusercontent.com/46564046/235316172-496d7578-86f2-4d7f-85c2-d8bd62204b7f.jpg){: width="100" height="100"}
+<img width="300" alt="image" src="https://user-images.githubusercontent.com/46564046/235316172-496d7578-86f2-4d7f-85c2-d8bd62204b7f.jpg">
 
 # 김요셉 | 게임 클라이언트 개발자
 
