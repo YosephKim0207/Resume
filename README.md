@@ -81,7 +81,7 @@ Git
 
 ### 소켓 프로그래밍 (학부과제 / C)
 
-소스코드 링크 : 
+소스코드 링크 : https://github.com/YosephKim0207/SocketProgramming
 
 - 소켓 통신을 통한 파일 송수신
 
