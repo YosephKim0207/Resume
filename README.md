@@ -85,7 +85,7 @@ Git
 
 - 소켓 통신을 통한 파일 송수신
 
- <img width="1237" alt="image" src="https://user-images.githubusercontent.com/46564046/235702302-f454d4f1-eb2c-49e0-84fa-75a2303e197a.png">
+ <img width="600" alt="image" src="https://user-images.githubusercontent.com/46564046/235702302-f454d4f1-eb2c-49e0-84fa-75a2303e197a.png">
 
 
 ## 개선 / 문제해결 사례
