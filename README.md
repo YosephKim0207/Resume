@@ -30,7 +30,7 @@ Git
 
 ### 3인칭 루트슈터 게임 제작(개인과제 / C++ /  언리얼)
 
-![EscapeFromAC_Default](https://user-images.githubusercontent.com/46564046/233114705-ffad50db-3746-49f2-94bb-7d93231bae29.gif)
+![EscapeFromAC_Final](https://github.com/YosephKim0207/Resume/assets/46564046/5185392a-2b47-4039-9736-62f4440b5dd6)
 
 기간 : 2023.02~2023.04 / 포트폴리오 링크 : https://github.com/YosephKim0207/EscapeFromAC
 
