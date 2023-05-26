@@ -556,7 +556,7 @@ public class PoolManager {
 </details>
  
 
-### 언리얼 프로젝트에서의 오브젝트 풀링
+### 언리얼 오브젝트 풀링
 
 
 문제
