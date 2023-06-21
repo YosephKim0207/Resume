@@ -43,6 +43,162 @@ Git
 - UMG를 활용하여 플레이어블 캐릭터의 실시간 정보 및 파츠 변경에 따른 능력치 변화 시각화 UI 제작
 - 위젯, 비헤이비어 트리 제외 99% C++ 구현
 
+### 개선 / 문제해결 사례
+
+### 언리얼 오브젝트 풀링
+
+
+문제
+- 전투시 성능 저하
+
+원인
+- 슈팅 게임으로서 빈번한 Projectile 액터 생성 및 제거로 인한 메모리 할당 / 해제 및 GC와 메모리 파편화 문제
+
+해결
+- GameInstance에 오브젝트 풀 템플릿을 만들어 오브젝트 풀 이용을 원하는 클래스는 자유롭게 풀 생성 및 사용
+
+결과
+- 프로파일러 기준 평균 게임 스레드 성능 13% 향상
+
+
+
+[PoolManager 전체 코드 바로가기](https://github.com/YosephKim0207/EscapeFromAC/blob/main/Source/EscapeFromAC/A_PoolManager.h)
+<details>
+<summary>PoolManager 구현 템플릿 코드 펼치기</summary>
+
+
+
+```cpp
+/**
+ * Get template class's Actor from Object Pool
+ * If Pool is not exist, Make object pool about class and return
+ */
+template <class T>
+T* AA_PoolManager::GetThisObject(UClass* Class, const FVector& Location, const FRotator& Rotation,
+	const FActorSpawnParameters& SpawnParameters)
+{
+	TArray<AActor*>* Pool = ObjectPool.Find(Class);
+	
+	// Object Pool is Exist
+	if(Pool != nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("PoolManager : %s has Pool"), *Class->GetName());
+		
+		for(AActor* PoolingActor : *Pool)
+		{
+			bool IsHidden = PoolingActor->IsHidden();
+		
+			if(IsHidden)
+			{
+				PoolingActor->SetActorLocation(Location);
+				PoolingActor->SetActorRotation(Rotation);
+				PoolingActor->SetOwner(SpawnParameters.Owner);
+				PoolingActor->SetInstigator(SpawnParameters.Instigator);
+				PoolingActor->SetActorHiddenInGame(false);
+		
+				return Cast<T>(PoolingActor);
+			}
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("PoolManager : %s Pool is empty"), *Class->GetName());
+		
+		return nullptr;
+	}
+
+	// Pool doesn't Exist
+	UE_LOG(LogTemp, Warning, TEXT("PoolManager : %s doesn't have Pool"), *Class->GetName());
+	
+	TArray<AActor*> NewPool;
+	UWorld* World = GetWorld();
+	if(World)
+	{
+		for(int8 SpawnIndex = 0; SpawnIndex < PoolSize; ++SpawnIndex)
+		{
+			T* RespawnActor;
+			RespawnActor = GetWorld()->SpawnActor<T>(Class, FVector::ZeroVector, FRotator::ZeroRotator);
+			
+			RespawnActor->SetActorHiddenInGame(true);
+			NewPool.Add(RespawnActor);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PoolManager : World is nullPtr"));
+
+		return nullptr;
+	}
+	
+
+	UE_LOG(LogTemp, Log, TEXT("PoolManager : %s make Pool"), *Class->GetName());
+	
+	ObjectPool.Add(Class, NewPool);
+	
+	AActor* ReturnActor;
+	ReturnActor = (*ObjectPool.Find(Class))[0];
+	ReturnActor->SetActorLocation(Location);
+	ReturnActor->SetActorRotation(Rotation);
+	ReturnActor->SetOwner(SpawnParameters.Owner);
+	ReturnActor->SetInstigator(SpawnParameters.Instigator);
+	ReturnActor->SetActorHiddenInGame(false);
+
+	UE_LOG(LogTemp, Log, TEXT("PoolManager : return %s from init pool"), *Class->GetName());
+	
+	return Cast<T>(ReturnActor);
+}
+```
+
+</details>
+	
+	
+	
+[A_Character 전체 코드 바로가기](https://github.com/YosephKim0207/EscapeFromAC/blob/main/Source/EscapeFromAC/A_Character.cpp)
+<details>
+<summary>A_Character에서의 PoolManager 사용 코드 펼치기</summary>
+
+
+
+```cpp
+if(GetbIsShootable() && GetbIsRightArmOnFire())
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = this;
+		SpawnParameters.Instigator = GetInstigator();
+
+		UWorld* World = GetWorld();
+		UACGameInstance* ACGameInstance = Cast<UACGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		AA_PoolManager* PoolManager = ACGameInstance->GetPoolManager();
+		if(PoolManager)
+		{
+			AA_Projectile* Projectile = PoolManager->GetThisObject<AA_Projectile>(TempProjectile, ProjectileRespawnLocation + (ProjectileShootRotator.Vector() * 10.0f), ProjectileShootRotator, SpawnParameters);
+
+			if(Projectile != nullptr)
+			{
+				SetProjectileData(Projectile, EModular::ERightArm, true);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Log, TEXT("%s : %s Pool is empty! Do SpawnActor"), *GetName(), *TempProjectile->GetName());
+				Projectile = World->SpawnActor<AA_Projectile>(TempProjectile, ProjectileRespawnLocation + (ProjectileShootRotator.Vector() * 10.0f), ProjectileShootRotator, SpawnParameters);
+				if(Projectile != nullptr)
+				{
+					SetProjectileData(Projectile, EModular::ERightArm, false);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("%s : Get Projectile Fail!"), *GetName());
+				}
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%s : PoolManager is nullPtr!"), *GetName());
+		}
+	}
+```
+
+</details>
+
+
 ### 탑다운 2D 슈팅게임 제작(개인과제 / C# / 유니티)
 
 ![플레이핵심완성2](https://user-images.githubusercontent.com/46564046/233091869-20c84a42-7a4b-41d9-8f8c-90f21aaeae48.gif)
@@ -58,40 +214,7 @@ Git
 - 오브젝트 풀링을 통한 CPU 사용률 50% 감소
 - A* 알고리즘을 응용한 길찾기 인공지능 제작
 
-### 스토리 중심 게임 제작(학부개인과제 / C# / 유니티)
-
-![전체보스연출](https://user-images.githubusercontent.com/46564046/235314111-4ea7c630-a4f5-4a8a-b34b-5859ca31969c.gif)
-
-기간 : 2021.11 / 포트폴리오 링크 : https://github.com/YosephKim0207/MotionTest_Playable
-
-단편 소설 집필 및 전체 게임 제작
-
-특징
-
-- 서사 중심 플레이 제작
-
-- 카메라 워크 제작
-
-## ETC
-
----
-
-### Watcher - 학생의 프로그래밍 활동 추적 시스템 (학부연구생과제 / 파이썬)
-
-- Django를 통한 데이터 시각화 웹페이지 구축
-
-### 소켓 프로그래밍 (학부과제 / C)
-
-소스코드 링크 : https://github.com/YosephKim0207/SocketProgramming
-
-- 소켓 통신을 통한 파일 송수신
-
- <img width="600" alt="image" src="https://user-images.githubusercontent.com/46564046/235702302-f454d4f1-eb2c-49e0-84fa-75a2303e197a.png">
-
-
-## 개선 / 문제해결 사례
-
----
+### 개선 / 문제해결 사례
 
 ### 길찾기 함수 콜 최적화  
 
@@ -554,161 +677,6 @@ public class PoolManager {
 ```
 
 </details>
- 
-
-### 언리얼 오브젝트 풀링
-
-
-문제
-- 전투시 성능 저하
-
-원인
-- 슈팅 게임으로서 빈번한 Projectile 액터 생성 및 제거로 인한 메모리 할당 / 해제 및 GC와 메모리 파편화 문제
-
-해결
-- GameInstance에 오브젝트 풀 템플릿을 만들어 오브젝트 풀 이용을 원하는 클래스는 자유롭게 풀 생성 및 사용
-
-결과
-- 프로파일러 기준 평균 게임 스레드 성능 13% 향상
-
-
-
-[PoolManager 전체 코드 바로가기](https://github.com/YosephKim0207/EscapeFromAC/blob/main/Source/EscapeFromAC/A_PoolManager.h)
-<details>
-<summary>PoolManager 구현 템플릿 코드 펼치기</summary>
-
-
-
-```cpp
-/**
- * Get template class's Actor from Object Pool
- * If Pool is not exist, Make object pool about class and return
- */
-template <class T>
-T* AA_PoolManager::GetThisObject(UClass* Class, const FVector& Location, const FRotator& Rotation,
-	const FActorSpawnParameters& SpawnParameters)
-{
-	TArray<AActor*>* Pool = ObjectPool.Find(Class);
-	
-	// Object Pool is Exist
-	if(Pool != nullptr)
-	{
-		UE_LOG(LogTemp, Log, TEXT("PoolManager : %s has Pool"), *Class->GetName());
-		
-		for(AActor* PoolingActor : *Pool)
-		{
-			bool IsHidden = PoolingActor->IsHidden();
-		
-			if(IsHidden)
-			{
-				PoolingActor->SetActorLocation(Location);
-				PoolingActor->SetActorRotation(Rotation);
-				PoolingActor->SetOwner(SpawnParameters.Owner);
-				PoolingActor->SetInstigator(SpawnParameters.Instigator);
-				PoolingActor->SetActorHiddenInGame(false);
-		
-				return Cast<T>(PoolingActor);
-			}
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("PoolManager : %s Pool is empty"), *Class->GetName());
-		
-		return nullptr;
-	}
-
-	// Pool doesn't Exist
-	UE_LOG(LogTemp, Warning, TEXT("PoolManager : %s doesn't have Pool"), *Class->GetName());
-	
-	TArray<AActor*> NewPool;
-	UWorld* World = GetWorld();
-	if(World)
-	{
-		for(int8 SpawnIndex = 0; SpawnIndex < PoolSize; ++SpawnIndex)
-		{
-			T* RespawnActor;
-			RespawnActor = GetWorld()->SpawnActor<T>(Class, FVector::ZeroVector, FRotator::ZeroRotator);
-			
-			RespawnActor->SetActorHiddenInGame(true);
-			NewPool.Add(RespawnActor);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PoolManager : World is nullPtr"));
-
-		return nullptr;
-	}
-	
-
-	UE_LOG(LogTemp, Log, TEXT("PoolManager : %s make Pool"), *Class->GetName());
-	
-	ObjectPool.Add(Class, NewPool);
-	
-	AActor* ReturnActor;
-	ReturnActor = (*ObjectPool.Find(Class))[0];
-	ReturnActor->SetActorLocation(Location);
-	ReturnActor->SetActorRotation(Rotation);
-	ReturnActor->SetOwner(SpawnParameters.Owner);
-	ReturnActor->SetInstigator(SpawnParameters.Instigator);
-	ReturnActor->SetActorHiddenInGame(false);
-
-	UE_LOG(LogTemp, Log, TEXT("PoolManager : return %s from init pool"), *Class->GetName());
-	
-	return Cast<T>(ReturnActor);
-}
-```
-
-</details>
-	
-	
-	
-[A_Character 전체 코드 바로가기](https://github.com/YosephKim0207/EscapeFromAC/blob/main/Source/EscapeFromAC/A_Character.cpp)
-<details>
-<summary>A_Character에서의 PoolManager 사용 코드 펼치기</summary>
-
-
-
-```cpp
-if(GetbIsShootable() && GetbIsRightArmOnFire())
-	{
-		FActorSpawnParameters SpawnParameters;
-		SpawnParameters.Owner = this;
-		SpawnParameters.Instigator = GetInstigator();
-
-		UWorld* World = GetWorld();
-		UACGameInstance* ACGameInstance = Cast<UACGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		AA_PoolManager* PoolManager = ACGameInstance->GetPoolManager();
-		if(PoolManager)
-		{
-			AA_Projectile* Projectile = PoolManager->GetThisObject<AA_Projectile>(TempProjectile, ProjectileRespawnLocation + (ProjectileShootRotator.Vector() * 10.0f), ProjectileShootRotator, SpawnParameters);
-
-			if(Projectile != nullptr)
-			{
-				SetProjectileData(Projectile, EModular::ERightArm, true);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Log, TEXT("%s : %s Pool is empty! Do SpawnActor"), *GetName(), *TempProjectile->GetName());
-				Projectile = World->SpawnActor<AA_Projectile>(TempProjectile, ProjectileRespawnLocation + (ProjectileShootRotator.Vector() * 10.0f), ProjectileShootRotator, SpawnParameters);
-				if(Projectile != nullptr)
-				{
-					SetProjectileData(Projectile, EModular::ERightArm, false);
-				}
-				else
-				{
-					UE_LOG(LogTemp, Warning, TEXT("%s : Get Projectile Fail!"), *GetName());
-				}
-			}
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("%s : PoolManager is nullPtr!"), *GetName());
-		}
-	}
-```
-
-</details>
-
 
 
 ### 플레이어의 특정 위치 진입시 프리징 문제
@@ -725,4 +693,39 @@ if(GetbIsShootable() && GetbIsRightArmOnFire())
  
 결과
 - F값 급증 문제 해결 및 알고리즘 이용 객체들이 동일한 좌표를 향해 무리지어 이동하는 현상을 완화
+
+
+### 스토리 중심 게임 제작(학부개인과제 / C# / 유니티)
+
+![전체보스연출](https://user-images.githubusercontent.com/46564046/235314111-4ea7c630-a4f5-4a8a-b34b-5859ca31969c.gif)
+
+기간 : 2021.11 / 포트폴리오 링크 : https://github.com/YosephKim0207/MotionTest_Playable
+
+단편 소설 집필 및 전체 게임 제작
+
+특징
+
+- 서사 중심 플레이 제작
+
+- 카메라 워크 제작
+
+## ETC
+
+---
+
+### Watcher - 학생의 프로그래밍 활동 추적 시스템 (학부연구생과제 / 파이썬)
+
+기간 : 2020.08~2021.12
+
+- Django를 통한 데이터 시각화 웹페이지 구축
+
+### 소켓 프로그래밍 (학부과제 / C)
+
+소스코드 링크 : https://github.com/YosephKim0207/SocketProgramming
+
+- 소켓 통신을 통한 파일 송수신
+
+ <img width="600" alt="image" src="https://user-images.githubusercontent.com/46564046/235702302-f454d4f1-eb2c-49e0-84fa-75a2303e197a.png">
+
+
 
