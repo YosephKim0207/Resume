@@ -319,7 +319,7 @@ if(GetbIsShootable() && GetbIsRightArmOnFire())
 - BulletController의 Update함수 내부에 존재하는 불필요한 연산
 
 해결
-- 오브젝트 풀에서 총알 호출 시 총알의 Transform과 총알을 생성하는 클래스만 전달
+- 오브젝트 풀에서 총알 호출 시 총알의 Transform과 총알을 생성 주체의 클래스만 전달
 - Update함수에서는 총알이 카메라를 벗어났는지만 확인
 
 결과
